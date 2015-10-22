@@ -1,4 +1,4 @@
-#include <TMRpcm.h>
+//#include <TMRpcm.h>
 #include <SD.h>
 #include <SPI.h>
 
@@ -17,9 +17,9 @@
 // SCK 13
 #define SD_CHIP_SELECT_PIN 10
 
-TMRpcm audio; // an object for playing sounds
+//TMRpcm audio; // an object for playing sounds
 
-#define DEFAULT_INTERVAL 50
+#define DEFAULT_INTERVAL 200
 long interval = DEFAULT_INTERVAL;
 const byte ledGroups[4] = { A0, A1, A2, A3 };
 const byte timeTravelLeds[2] = { A4, A5 };
@@ -30,7 +30,7 @@ byte currentLedGroup = 0;
 bool currentState = false;
 
 unsigned long previousTimeTravelMillis = 0;
-bool timeTravelMode = false;
+byte timeTravelMode = 1;
 
 void setup() {
   Serial.begin(9600);
@@ -42,7 +42,7 @@ void setup() {
   }
 
   // initialize
-  audio.speakerPin = 9;
+//  audio.speakerPin = 9;
     
   // setup SD-card
   Serial.print("Initializing SD card...");
@@ -51,8 +51,8 @@ void setup() {
   } else {
     Serial.println(" done.");
 
-    audio.volume(1);
-    audio.play("twinkle.wav");
+//    audio.volume(1);
+//    audio.play("twinkle.wav");
     //char info[32];
     //audio.listInfo("song.wav",info,0);
     //Serial.print(info);Serial.println(":"); 
@@ -70,7 +70,7 @@ void loop() {
   }
 
   if(!timeTravelMode && (currentMillis-previousTimeTravelMillis >= 300000)) {
-    timeTravelMode = true;
+    timeTravelMode = 1;
   }
  
   if(ledEnabled && (currentMillis - previousMillis >= interval)) {
@@ -83,20 +83,32 @@ void loop() {
     if(!currentState && ++currentLedGroup >= sizeof(ledGroups))
       currentLedGroup = 0;
 
-    if(timeTravelMode) {
-      if(currentLedGroup == 3 && !currentState) {
-        digitalWrite(timeTravelLeds[0], HIGH);
-        digitalWrite(timeTravelLeds[1], HIGH);
-      } else {
+    if(timeTravelMode > 0) {
+      if(timeTravelMode == 1) {
+        if(currentLedGroup == 3 && !currentState) {
+          digitalWrite(timeTravelLeds[0], HIGH);
+          //digitalWrite(timeTravelLeds[1], HIGH);
+        } else {
+          digitalWrite(timeTravelLeds[0], LOW);
+          digitalWrite(timeTravelLeds[1], LOW);
+        }
+        if(--interval <= 0) {
+          timeTravelMode = 2;
+          digitalWrite(timeTravelLeds[0], HIGH);
+          digitalWrite(timeTravelLeds[1], HIGH);
+          interval = DEFAULT_INTERVAL;
+          previousTimeTravelMillis = currentMillis;
+        }
+      } else if(currentMillis - previousTimeTravelMillis >= 2000) {
         digitalWrite(timeTravelLeds[0], LOW);
         digitalWrite(timeTravelLeds[1], LOW);
-      }
-      if(--interval <= 0) {
         previousTimeTravelMillis = currentMillis;
-        timeTravelMode = false;
-        interval = DEFAULT_INTERVAL;
+        timeTravelMode = 0;
       }
     }
+  } else if(timeTravelMode == 1 && digitalRead(timeTravelLeds[0]) == HIGH) {
+    digitalWrite(timeTravelLeds[0], LOW);
+    digitalWrite(timeTravelLeds[1], HIGH);
   }
 }
 
