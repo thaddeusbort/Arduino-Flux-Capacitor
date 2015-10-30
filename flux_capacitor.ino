@@ -85,36 +85,51 @@ void loop() {
 
     if(timeTravelMode > 0) {
       if(timeTravelMode == 1) {
-        if(currentLedGroup == 3 && !currentState) {
+        if(currentLedGroup == 3 && currentState) {
           digitalWrite(timeTravelLeds[0], HIGH);
-          //digitalWrite(timeTravelLeds[1], HIGH);
+          digitalWrite(timeTravelLeds[1], HIGH);
         } else {
           digitalWrite(timeTravelLeds[0], LOW);
           digitalWrite(timeTravelLeds[1], LOW);
         }
         if(--interval <= 0) {
-          timeTravelMode = 2;
+          //timeTravelMode = 2;
           digitalWrite(timeTravelLeds[0], HIGH);
           digitalWrite(timeTravelLeds[1], HIGH);
+          turnAllLedsOn();
+          delay(3000);
           interval = DEFAULT_INTERVAL;
+          //previousTimeTravelMillis = currentMillis;
+          digitalWrite(timeTravelLeds[0], LOW);
+          digitalWrite(timeTravelLeds[1], LOW);
           previousTimeTravelMillis = currentMillis;
+          timeTravelMode = 0;
         }
-      } else if(currentMillis - previousTimeTravelMillis >= 2000) {
-        digitalWrite(timeTravelLeds[0], LOW);
-        digitalWrite(timeTravelLeds[1], LOW);
-        previousTimeTravelMillis = currentMillis;
-        timeTravelMode = 0;
+//      } else if(currentMillis - previousTimeTravelMillis >= 2000) {
+//        digitalWrite(timeTravelLeds[0], LOW);
+//        digitalWrite(timeTravelLeds[1], LOW);
+//        previousTimeTravelMillis = currentMillis;
+//        timeTravelMode = 0;
       }
     }
-  } else if(timeTravelMode == 1 && digitalRead(timeTravelLeds[0]) == HIGH) {
-    digitalWrite(timeTravelLeds[0], LOW);
-    digitalWrite(timeTravelLeds[1], HIGH);
+//  } else if(timeTravelMode == 1 && digitalRead(timeTravelLeds[0]) == HIGH) {
+//    digitalWrite(timeTravelLeds[0], LOW);
+//    digitalWrite(timeTravelLeds[1], HIGH);
   }
 }
 
 void turnAllLedsOff() {
   for(byte i=0; i<sizeof(ledGroups); i++) {
     digitalWrite(ledGroups[i], LOW);
+  }
+  currentLedGroup = 0;
+  currentState = false;
+  previousMillis = 0;
+}
+
+void turnAllLedsOn() {
+  for(byte i=0; i<sizeof(ledGroups); i++) {
+    digitalWrite(ledGroups[i], HIGH);
   }
   currentLedGroup = 0;
   currentState = false;
